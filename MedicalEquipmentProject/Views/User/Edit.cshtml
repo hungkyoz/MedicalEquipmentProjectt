@@ -1,0 +1,72 @@
+﻿@model MedicalEquipmentProject.ViewModels.UserEditVM
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<h2>Edit User</h2>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data" id="editUserForm">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    @if (Model.CurrentAvatarPath != null)
+    {
+        <div class="mb-3">
+            <img src="@Model.CurrentAvatarPath" alt="Avatar" width="100" height="100" class="rounded-circle" />
+        </div>
+    }
+
+    <div class="form-group">
+        <label for="Avatar">Upload Avatar</label>
+        <input type="file" class="form-control" name="Avatar" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.getElementById("editUserForm").addEventListener("submit", function (e) {
+            const fullName = document.getElementById("FullName").value.trim();
+            const email = document.getElementById("Email").value.trim();
+
+            if (!fullName || !email) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: 'Vui lòng điền đầy đủ họ tên và email.',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        });
+    </script>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '@TempData["SuccessMessage"]',
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+    }
+}

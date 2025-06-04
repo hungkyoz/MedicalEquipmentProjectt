@@ -1,0 +1,96 @@
+﻿@model MedicalEquipmentProject.ViewModels.MedicalEquipmentEditVM
+
+@{
+    ViewData["Title"] = "Edit Equipment";
+}
+
+<h2>Edit Medical Equipment</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form asp-action="Edit" id="editForm">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Model"></label>
+        <input asp-for="Model" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Price"></label>
+        <input asp-for="Price" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Manufacturer"></label>
+        <input asp-for="Manufacturer" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PurchaseDate"></label>
+        <input asp-for="PurchaseDate" class="form-control" type="date" id="PurchaseDate" />
+        <span asp-validation-for="PurchaseDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="IsActive"></label>
+        <input asp-for="IsActive" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label for="AssignedUserId">Allocated To</label>
+        <select asp-for="AssignedUserId" asp-items="ViewBag.Users" class="form-control">
+            <option value="">-- Select user --</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi dữ liệu!',
+                text: '@TempData["ErrorMessage"]',
+                confirmButtonColor: '#d33'
+            });
+        </script>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '@Html.Raw(TempData["SuccessMessage"])',
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+    }
+}
+

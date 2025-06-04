@@ -1,0 +1,130 @@
+﻿@model PagedList<MedicalEquipment>
+@{
+    ViewData["Title"] = "Medical Equipment List";
+    var filter = (MedicalEquipmentProject.ViewModels.MedicalEquipmentFilter)ViewBag.Filter;
+}
+
+<div class="container mt-4">
+    <h2>Medical Equipment List</h2>
+
+    <form asp-action="Index" method="get" class="mb-4 p-3 bg-light rounded border">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Model</label>
+                <input name="Model" class="form-control" value="@filter.Model" placeholder="Search by model..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Min Price</label>
+                <input name="MinPrice" type="number" step="0.01" class="form-control" value="@filter.MinPrice" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Max Price</label>
+                <input name="MaxPrice" type="number" step="0.01" class="form-control" value="@filter.MaxPrice" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Model</th>
+                <th>Price</th>
+                <th>Manufacturer</th>
+                <th>Purchase Date</th>
+                <th>Is Active</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Model</td>
+                    <td>@item.Price.ToString("C")</td>
+                    <td>@item.Manufacturer</td>
+                    <td>@item.PurchaseDate.ToString("dd/MM/yyyy")</td>
+                    <td>@(item.IsActive ? "Yes" : "No")</td>
+                    <td>@(item.AssignedUser?.FullName ?? "Unassigned")</td>
+                    <td>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No permission</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new {
+                        pageNumber = i,
+                        Model = filter.Model,
+                        MinPrice = filter.MinPrice,
+                        MaxPrice = filter.MaxPrice
+                    })">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+    <script>
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Bạn có chắc?',
+                    text: "Thiết bị sẽ bị xóa vĩnh viễn!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: '@TempData["SuccessMessage"]'
+            });
+        </script>
+    }
+}

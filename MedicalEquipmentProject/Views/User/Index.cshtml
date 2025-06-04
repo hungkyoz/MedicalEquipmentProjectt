@@ -1,0 +1,29 @@
+﻿@model IEnumerable<MedicalEquipmentProject.Models.User>
+
+@{
+    ViewData["Title"] = "User List";
+}
+
+<h2>User List</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-warning">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
