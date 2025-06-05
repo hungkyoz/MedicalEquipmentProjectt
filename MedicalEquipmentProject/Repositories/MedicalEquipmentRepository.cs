@@ -17,7 +17,8 @@ namespace MedicalEquipmentProject.Repositories
         public async Task<PagedList<MedicalEquipment>> GetFilteredEquipmentAsync(MedicalEquipmentFilter filter)
         {
             var query = _context.MedicalEquipment
-               .Include(e => e.AssignedUser) 
+               .Include(e => e.AssignedUser)
+               .Include(e => e.Images)
                .AsQueryable();
 
 

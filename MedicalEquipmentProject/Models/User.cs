@@ -15,10 +15,13 @@ namespace MedicalEquipmentProject.Models
         [Required, MinLength(6)]
         public string Password { get; set; }
 
-        public string? AvatarPath { get; set; } 
+        public string? AvatarPath { get; set; }
 
+        public string? Bio { get; set; }
 
         public string Role { get; set; } = "User";
+
+        
 
         // Quan hệ 1-nhiều: 1 User có thể được cấp nhiều thiết bị y tế
         public ICollection<MedicalEquipment>? AllocatedEquipments { get; set; }

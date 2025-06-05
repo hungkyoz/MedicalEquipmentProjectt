@@ -15,4 +15,7 @@ public class MedicalEquipment
 
     public int? AssignedUserId { get; set; }
     public User? AssignedUser { get; set; }
+
+    public ICollection<MedicalEquipmentImage>? Images { get; set; }
+
 }

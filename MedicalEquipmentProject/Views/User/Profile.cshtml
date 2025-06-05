@@ -1,0 +1,65 @@
+﻿@model MedicalEquipmentProject.ViewModels.UserEditVM
+
+@using System.Text.Json
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="d-flex justify-content-center mt-5">
+    <div class="card shadow rounded-4" style="width: 450px;">
+        <div class="card-body text-center">
+
+            <!-- Avatar -->
+            <div class="mb-4">
+                <img src="@Model.CurrentAvatarPath" alt="Avatar" class="rounded-circle border shadow"
+                     style="width: 150px; height: 150px; object-fit: cover;" />
+            </div>
+
+            <!-- Tên -->
+            <h4 class="fw-bold text-primary">@Model.FullName</h4>
+
+            <!-- Email -->
+            <p class="text-muted mb-2">
+                <i class="fas fa-envelope me-2"></i>@Model.Email
+            </p>
+
+            <!-- Giới thiệu -->
+            @if (!string.IsNullOrEmpty(Model.Bio))
+            {
+                <hr />
+                <p class="text-secondary fst-italic">@Model.Bio</p>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">Chưa có mô tả giới thiệu.</p>
+            }
+
+            <!-- Nút chỉnh sửa + đổi mật khẩu -->
+            <div class="d-flex flex-column align-items-center mt-3" style="width: 100%;">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary mb-2 w-75 text-center">
+                    <i class="fas fa-user-edit me-2"></i> Chỉnh sửa thông tin
+                </a>
+                <a asp-action="ChangePassword" class="btn btn-outline-warning w-75 text-center">
+                    <i class="fas fa-key me-2"></i> Đổi mật khẩu
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: @Html.Raw(JsonSerializer.Serialize(TempData["SuccessMessage"]))
+            });
+        </script>
+    }
+}

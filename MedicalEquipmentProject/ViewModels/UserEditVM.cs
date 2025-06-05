@@ -14,7 +14,10 @@ namespace MedicalEquipmentProject.ViewModels
         [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; }
 
-        public IFormFile? Avatar { get; set; } 
+        public IFormFile? Avatar { get; set; }
+        [StringLength(500)]
+        public string? Bio { get; set; }
+
         public string? CurrentAvatarPath { get; set; } // Hiển thị ảnh hiện tại
     }
 }

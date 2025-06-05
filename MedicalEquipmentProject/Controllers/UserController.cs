@@ -26,6 +26,11 @@ namespace MedicalEquipmentProject.Controllers
             return View(users);
         }
 
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
         public async Task<IActionResult> Profile()
         {
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -37,10 +42,11 @@ namespace MedicalEquipmentProject.Controllers
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
-                CurrentAvatarPath = user.AvatarPath
+                CurrentAvatarPath = user.AvatarPath,
+                Bio = user.Bio
             };
 
-            return View("Edit", vm); 
+            return View("Profile", vm); 
         }
 
 
@@ -61,7 +67,8 @@ namespace MedicalEquipmentProject.Controllers
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email,
-                CurrentAvatarPath = user.AvatarPath
+                CurrentAvatarPath = user.AvatarPath,
+                Bio = user.Bio
             };
 
             return View(vm);
@@ -87,6 +94,7 @@ namespace MedicalEquipmentProject.Controllers
 
             user.FullName = vm.FullName;
             user.Email = vm.Email;
+            user.Bio = vm.Bio;
 
             if (vm.Avatar != null)
             {
@@ -106,7 +114,35 @@ namespace MedicalEquipmentProject.Controllers
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "User updated successfully!";
-            return RedirectToAction("Index");
+
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Index");
+            else
+                return RedirectToAction("Profile");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordVM vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(currentUserId);
+            if (user == null) return NotFound();
+
+            if (user.Password != vm.CurrentPassword)
+            {
+                ModelState.AddModelError("CurrentPassword", "Mật khẩu hiện tại không đúng");
+                return View(vm);
+            }
+
+            user.Password = vm.NewPassword;
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Password change Succesfull";
+            return RedirectToAction("Profile");
+        }
+
+
     }
 }

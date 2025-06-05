@@ -18,7 +18,7 @@
     </div>
 }
 
-<form asp-action="Edit" id="editForm">
+<form asp-action="Edit" id="editForm" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
 
     <div class="form-group">
@@ -59,12 +59,36 @@
         </select>
     </div>
 
+    <!-- ✅ Upload nhiều ảnh -->
+    <div class="form-group">
+        <label for="Images">Upload thêm ảnh thiết bị (có thể chọn nhiều)</label>
+        <input type="file" class="form-control" name="Images" multiple />
+    </div>
+
+    <!-- ✅ Hiển thị ảnh hiện có -->
+    @if (Model.ExistingImagePaths != null && Model.ExistingImagePaths.Any())
+    {
+        <div class="mb-3">
+            <label>Ảnh hiện tại:</label>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var path in Model.ExistingImagePaths)
+                {
+                    <a href="@path" data-lightbox="equipment-images">
+                        <img src="@path" alt="Ảnh" width="100" height="100" class="rounded border" />
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
     <button type="submit" class="btn btn-success">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Back</a>
 </form>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet" />
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

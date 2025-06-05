@@ -50,7 +50,7 @@ namespace MedicalEquipmentProject.Controllers
             return RedirectToAction("Login");
         }
 
- \
+ 
         public IActionResult Register()
         {
             return View();

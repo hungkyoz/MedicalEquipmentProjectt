@@ -9,11 +9,19 @@ namespace MedicalEquipmentProject.Data
 
         public DbSet<MedicalEquipment> MedicalEquipment { get; set; }
         public DbSet<User> Users { get; set; }
+        public object MedicalEquipmentImages { get; internal set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<MedicalEquipment>().ToTable("MedicalEquipment");
             modelBuilder.Entity<User>().ToTable("Users");
+
+            modelBuilder.Entity<MedicalEquipmentImage>()
+              .ToTable("MedicalEquipmentImages")
+              .HasOne(img => img.Equipment)
+              .WithMany(eq => eq.Images)
+              .HasForeignKey(img => img.EquipmentId)
+              .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

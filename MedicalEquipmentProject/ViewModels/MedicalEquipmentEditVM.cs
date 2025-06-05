@@ -26,6 +26,9 @@ namespace MedicalEquipmentProject.ViewModels
 
         public int? AssignedUserId { get; set; }
 
+        public List<IFormFile>? Images { get; set; } // Nhiều ảnh upload
+        public List<string>? ExistingImagePaths { get; set; } // Hiển thị lại ảnh cũ (nếu cần)
+
         public static ValidationResult ValidatePurchaseDate(DateTime purchaseDate, ValidationContext context)
         {
             if (purchaseDate > DateTime.Today)

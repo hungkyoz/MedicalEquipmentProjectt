@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace MedicalEquipmentProject.Controllers
 {
@@ -21,16 +23,20 @@ namespace MedicalEquipmentProject.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(MedicalEquipmentProject.ViewModels.MedicalEquipmentFilter filter)
+        public async Task<IActionResult> Index(MedicalEquipmentFilter filter)
         {
             var result = await _service.GetFilteredEquipmentAsync(filter);
             ViewBag.Filter = filter;
             return View(result);
         }
+
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
-            var item = await _context.MedicalEquipment.FindAsync(id);
+            var item = await _context.MedicalEquipment
+                .Include(e => e.Images)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
             if (item == null) return NotFound();
 
             ViewBag.Users = new SelectList(await _context.Users.ToListAsync(), "Id", "FullName");
@@ -44,7 +50,8 @@ namespace MedicalEquipmentProject.Controllers
                 Manufacturer = item.Manufacturer,
                 PurchaseDate = item.PurchaseDate,
                 IsActive = item.IsActive,
-                AssignedUserId = item.AssignedUserId
+                AssignedUserId = item.AssignedUserId,
+                ExistingImagePaths = item.Images?.Select(i => i.ImagePath).ToList()
             });
         }
 
@@ -70,8 +77,36 @@ namespace MedicalEquipmentProject.Controllers
             item.IsActive = vm.IsActive;
             item.AssignedUserId = vm.AssignedUserId;
 
+            // ✅ Upload nhiều ảnh thiết bị & tự động resize về 1091x768 px
+            if (vm.Images != null && vm.Images.Count > 0)
+            {
+                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/equipment-images");
+                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+
+                foreach (var image in vm.Images)
+                {
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+                    var filePath = Path.Combine(uploads, fileName);
+
+                    using (var stream = image.OpenReadStream())
+                    using (var img = SixLabors.ImageSharp.Image.Load(stream))
+                    {
+                        img.Mutate(x => x.Resize(1091, 768));
+                        await img.SaveAsync(filePath);
+                    }
+
+                    var equipmentImage = new MedicalEquipmentImage
+                    {
+                        EquipmentId = item.Id,
+                        ImagePath = "/equipment-images/" + fileName
+                    };
+
+                    _context.Set<MedicalEquipmentImage>().Add(equipmentImage);
+                }
+            }
+
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Thiết bị đã được cập nhật thành công!";
+            TempData["SuccessMessage"] = "Device has been updated successfully";
             return RedirectToAction("Index");
         }
 
@@ -79,17 +114,26 @@ namespace MedicalEquipmentProject.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var equipment = await _context.MedicalEquipment.FindAsync(id);
+            var equipment = await _context.MedicalEquipment
+                                          .Include(e => e.Images)
+                                          .FirstOrDefaultAsync(e => e.Id == id);
+
             if (equipment == null)
                 return NotFound();
 
+            // ✅ Xóa tất cả ảnh liên quan trước
+            if (equipment.Images != null && equipment.Images.Any())
+            {
+                _context.Set<MedicalEquipmentImage>().RemoveRange(equipment.Images);
+
+            }
+
             _context.MedicalEquipment.Remove(equipment);
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Remove succesfull.";
+
+            TempData["SuccessMessage"] = "Device remove succesfull!";
             return RedirectToAction("Index");
         }
-
-
 
     }
 }
