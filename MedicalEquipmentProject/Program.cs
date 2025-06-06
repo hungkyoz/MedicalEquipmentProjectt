@@ -45,9 +45,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=MedicalEquipment}/{action=Index}/{id?}");
+
+app.MapControllers();
 
 
 app.Run();
