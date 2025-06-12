@@ -1,0 +1,46 @@
+﻿@model MedicalEquipmentProject.Models.MedicalEquipment
+
+<h2>Test Transaction Rollback</h2>
+
+@{
+    var error = TempData["ErrorMessage"] as string;
+    var success = TempData["SuccessMessage"] as string;
+}
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert alert-success">@success</div>
+}
+
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label>Tên thiết bị</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Giá</label>
+        <input asp-for="Price" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Ảnh thiết bị (upload ít nhất 2 ảnh)</label>
+        <input type="file" name="Images" class="form-control" multiple />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Tạo thiết bị (Test rollback)</button>
+</form>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-3">@TempData["SuccessMessage"]</div>
+}

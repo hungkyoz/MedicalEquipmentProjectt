@@ -9,7 +9,8 @@ namespace MedicalEquipmentProject.Data
 
         public DbSet<MedicalEquipment> MedicalEquipment { get; set; }
         public DbSet<User> Users { get; set; }
-        public object MedicalEquipmentImages { get; internal set; }
+        public DbSet<MedicalEquipmentImage> MedicalEquipmentImages { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
