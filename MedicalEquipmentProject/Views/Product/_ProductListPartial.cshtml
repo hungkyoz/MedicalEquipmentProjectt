@@ -1,0 +1,34 @@
+﻿@model List<MedicalEquipmentProject.Models.Product>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Ảnh</th>
+            <th>Tên sản phẩm</th>
+            <th>Số lượng</th>
+            <th>Ngày</th>
+            <th>Giá</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>
+                    @if (p.ProductImages != null && p.ProductImages.Any())
+                    {
+                        <img src="@p.ProductImages.First().ImageUrl" width="100" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Không có ảnh</span>
+                    }
+                </td>
+                <td>@p.Name</td>
+                <td>@p.Quantity</td>
+                <td>@p.Date.ToString("dd/MM/yyyy")</td>
+                <td>@p.Price.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalEquipmentProject.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250605043037_AddBioOnly")]
-    partial class AddBioOnly
+    [Migration("20250624083552_AddProductsTable")]
+    partial class AddProductsTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,7 @@ namespace MedicalEquipmentProject.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("PurchaseDate")
@@ -81,7 +82,88 @@ namespace MedicalEquipmentProject.Migrations
 
                     b.HasIndex("EquipmentId");
 
-                    b.ToTable("MedicalEquipmentImage");
+                    b.ToTable("MedicalEquipmentImages", (string)null);
+                });
+
+            modelBuilder.Entity("MedicalEquipmentProject.Models.Product", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Date = new DateTime(2025, 6, 19, 0, 0, 0, 0, DateTimeKind.Local),
+                            Name = "Bàn làm việc",
+                            Price = 2500000m,
+                            Quantity = 10
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Date = new DateTime(2025, 6, 14, 0, 0, 0, 0, DateTimeKind.Local),
+                            Name = "Ghế văn phòng",
+                            Price = 1500000m,
+                            Quantity = 15
+                        });
+                });
+
+            modelBuilder.Entity("MedicalEquipmentProject.Models.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ImageUrl = "/product-images/1.sm.webp",
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ImageUrl = "/product-images/2.webp",
+                            ProductId = 2
+                        });
                 });
 
             modelBuilder.Entity("MedicalEquipmentProject.Models.User", b =>
@@ -139,9 +221,25 @@ namespace MedicalEquipmentProject.Migrations
                     b.Navigation("Equipment");
                 });
 
+            modelBuilder.Entity("MedicalEquipmentProject.Models.ProductImage", b =>
+                {
+                    b.HasOne("MedicalEquipmentProject.Models.Product", "Product")
+                        .WithMany("ProductImages")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("MedicalEquipmentProject.Models.MedicalEquipment", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("MedicalEquipmentProject.Models.Product", b =>
+                {
+                    b.Navigation("ProductImages");
                 });
 
             modelBuilder.Entity("MedicalEquipmentProject.Models.User", b =>

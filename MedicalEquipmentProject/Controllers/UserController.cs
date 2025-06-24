@@ -19,11 +19,12 @@ namespace MedicalEquipmentProject.Controllers
         // Danh sách user theo role ( gom role user va role admin )
         public async Task<IActionResult> Index()
         {
-            if (!User.IsInRole("Admin"))
-                return Forbid(); // Chặn user thường
+            //if (!User.IsInRole("Admin"))
+            //    return Forbid(); // Chặn user thường
 
             var users = await _context.Users.ToListAsync();
-            return View(users);
+            //return View(users);
+            return Ok("123");
         }
 
         public IActionResult ChangePassword()
