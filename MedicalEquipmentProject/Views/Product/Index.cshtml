@@ -1,13 +1,50 @@
-﻿@{
+﻿@using MedicalEquipmentProject.ViewModels
+@model ProductViewModel
+
+@{
     ViewData["Title"] = "Product List";
 }
 <h2>Danh sách sản phẩm</h2>
 
+<!-- ✅ Form Thêm Sản Phẩm -->
+<form id="product-form" enctype="multipart/form-data">
+    <div>
+        <label asp-for="Name"></label>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+    </div>
+    <div>
+        <label asp-for="Quantity"></label>
+        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", type = "number" })
+        @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
+    </div>
+    <div>
+        <label asp-for="Date"></label>
+        @Html.TextBoxFor(m => m.Date, new { @class = "form-control", type = "date" })
+        @Html.ValidationMessageFor(m => m.Date, "", new { @class = "text-danger" })
+    </div>
+    <div>
+        <label asp-for="Price"></label>
+        @Html.TextBoxFor(m => m.Price, new { @class = "form-control", type = "number" })
+        @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
+    </div>
+    <div>
+        <label asp-for="Images">Hình ảnh (.webp):</label>
+        <input type="file" name="Images" class="form-control" multiple accept=".webp" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
+</form>
+
+<hr />
+
+<!-- ✅ Danh sách sản phẩm -->
 <div id="product-list">
     <!-- Nội dung sẽ được load bằng AJAX -->
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function loadProducts() {
             $("#product-list").load("/Product/GetList");
@@ -15,6 +52,28 @@
 
         $(document).ready(function () {
             loadProducts();
+
+            $("#product-form").submit(function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: '/Product/AddProduct',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        $('#product-list').html(data);
+                        $("#product-form")[0].reset();
+                        Swal.fire("Thành công", "Đã thêm sản phẩm", "success");
+                    },
+                    error: function (xhr) {
+                        let err = xhr.responseJSON?.errors?.join("<br>") ?? "Lỗi không xác định";
+                        Swal.fire("Lỗi", err, "error");
+                    }
+                });
+            });
         });
     </script>
 }
