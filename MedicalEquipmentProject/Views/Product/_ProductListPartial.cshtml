@@ -8,12 +8,13 @@
             <th>Số lượng</th>
             <th>Ngày</th>
             <th>Giá</th>
+            <th>Hành động</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var p in Model)
         {
-            <tr>
+            <tr id="product-@p.Id">
                 <td>
                     @if (p.ProductImages != null && p.ProductImages.Any())
                     {
@@ -28,6 +29,12 @@
                 <td>@p.Quantity</td>
                 <td>@p.Date.ToString("dd/MM/yyyy")</td>
                 <td>@p.Price.ToString("C")</td>
+                <td>
+                    <!-- Nút Sửa -->
+                    <button class="btn btn-warning" onclick="editProduct(@p.Id)">Sửa</button>
+                    <!-- Nút Xóa -->
+                    <button class="btn btn-danger" onclick="deleteProduct(@p.Id)">Xóa</button>
+                </td>
             </tr>
         }
     </tbody>

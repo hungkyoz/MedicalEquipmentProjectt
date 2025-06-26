@@ -4,6 +4,8 @@ namespace MedicalEquipmentProject.ViewModels
 {
     public class ProductViewModel
     {
+        public int Id { get; set; } // Thêm trường Id để hỗ trợ chỉnh sửa sản phẩm
+
         [Required(ErrorMessage = "Tên sản phẩm là bắt buộc")]
         public string Name { get; set; }
 

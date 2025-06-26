@@ -1,0 +1,60 @@
+﻿@using MedicalEquipmentProject.ViewModels
+@model ProductViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+}
+
+<h2>Chỉnh sửa sản phẩm</h2>
+
+<form id="edit-product-form" enctype="multipart/form-data">
+    <input type="hidden" id="productId" name="Id" value="@Model.Id" />
+
+    <div class="mb-3">
+        <label for="productName" class="form-label">Tên sản phẩm</label>
+        <input type="text" class="form-control" id="productName" name="Name" value="@Model.Name" required />
+    </div>
+    <div class="mb-3">
+        <label for="productQuantity" class="form-label">Số lượng</label>
+        <input type="number" class="form-control" id="productQuantity" name="Quantity" value="@Model.Quantity" required />
+    </div>
+    <div class="mb-3">
+        <label for="productDate" class="form-label">Ngày</label>
+        <input type="date" class="form-control" id="productDate" name="Date" value="@Model.Date.ToString("yyyy-MM-dd")" required />
+    </div>
+    <div class="mb-3">
+        <label for="productPrice" class="form-label">Giá</label>
+        <input type="number" class="form-control" id="productPrice" name="Price" value="@Model.Price" required />
+    </div>
+    <div class="mb-3">
+        <label for="productImages" class="form-label">Ảnh sản phẩm</label>
+        <input type="file" class="form-control" id="productImages" name="Images" multiple />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+</form>
+
+@section Scripts {
+    <script>
+        $('#edit-product-form').submit(function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            $.ajax({
+                url: '/Product/EditProduct',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    Swal.fire("Thành công", "Sản phẩm đã được cập nhật", "success");
+                    window.location.href = '/Product/Index'; // Redirect về trang danh sách
+                },
+                error: function (xhr) {
+                    let err = xhr.responseJSON?.errors?.join("<br>") ?? "Lỗi không xác định";
+                    Swal.fire("Lỗi", err, "error");
+                }
+            });
+        });
+    </script>
+}
