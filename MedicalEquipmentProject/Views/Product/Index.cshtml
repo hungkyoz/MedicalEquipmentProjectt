@@ -50,6 +50,31 @@
             $("#product-list").load("/Product/GetList");
         }
 
+        function editProduct(id) {
+            window.location.href = "/Product/EditProduct/" + id;
+        }
+
+        function deleteProduct(id) {
+            Swal.fire({
+                title: "Bạn có chắc muốn xoá?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Xoá",
+                cancelButtonText: "Huỷ"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/Product/DeleteProduct", { id: id })
+                        .done(function (response) {
+                            $("#product-list").html(response);
+                            Swal.fire("Đã xoá", "Sản phẩm đã được xoá thành công.", "success");
+                        })
+                        .fail(function () {
+                            Swal.fire("Lỗi", "Không thể xoá sản phẩm.", "error");
+                        });
+                }
+            });
+        }
+
         $(document).ready(function () {
             loadProducts();
 
@@ -76,4 +101,6 @@
             });
         });
     </script>
+}
+
 }
