@@ -29,8 +29,8 @@
         @Html.ValidationMessageFor(m => m.Price, "", new { @class = "text-danger" })
     </div>
     <div>
-        <label asp-for="Images">Hình ảnh (.webp):</label>
-        <input type="file" name="Images" class="form-control" multiple accept=".webp" />
+        <label asp-for="Images">Hình ảnh upload:</label>
+        <input type="file" name="Images" accept="image/png, image/jpeg, image/webp" multiple class="form-control" />
     </div>
     <br />
     <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
@@ -45,16 +45,33 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet" />
     <script>
         function loadProducts() {
             $("#product-list").load("/Product/GetList");
         }
 
-        function editProduct(id) {
-            window.location.href = "/Product/EditProduct/" + id;
+                function editProduct(id) {
+            $.ajax({
+                url: '/Product/EditProduct/' + id,
+                type: 'GET',
+                success: function () {
+                    window.location.href = '/Product/EditProduct/' + id;
+                },
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        Swal.fire("Lỗi", "Bạn không có quyền chỉnh sửa sản phẩm này", "error");
+                    } else if (xhr.status === 404) {
+                        Swal.fire("Lỗi", "Không tìm thấy sản phẩm", "error");
+                    } else {
+                        Swal.fire("Lỗi", "Có lỗi xảy ra khi truy cập chức năng chỉnh sửa", "error");
+                    }
+                }
+            });
         }
 
-        function deleteProduct(id) {
+                function deleteProduct(id) {
             Swal.fire({
                 title: "Bạn có chắc muốn xoá?",
                 icon: "warning",
@@ -68,12 +85,19 @@
                             $("#product-list").html(response);
                             Swal.fire("Đã xoá", "Sản phẩm đã được xoá thành công.", "success");
                         })
-                        .fail(function () {
-                            Swal.fire("Lỗi", "Không thể xoá sản phẩm.", "error");
+                        .fail(function (xhr) {
+                            if (xhr.status === 403) {
+                                Swal.fire("Lỗi", "Bạn không có quyền xoá sản phẩm này", "error");
+                            } else if (xhr.status === 404) {
+                                Swal.fire("Lỗi", "Sản phẩm không tồn tại", "error");
+                            } else {
+                                Swal.fire("Lỗi", "Không thể xoá sản phẩm.", "error");
+                            }
                         });
                 }
             });
         }
+
 
         $(document).ready(function () {
             loadProducts();
@@ -94,7 +118,7 @@
                         Swal.fire("Thành công", "Đã thêm sản phẩm", "success");
                     },
                     error: function (xhr) {
-                        let err = xhr.responseJSON?.errors?.join("<br>") ?? "Lỗi không xác định";
+                        let err = xhr.responseJSON?.errors?.join("<br>") ?? "Lỗi khi add sản phẩm";
                         Swal.fire("Lỗi", err, "error");
                     }
                 });
@@ -103,4 +127,4 @@
     </script>
 }
 
-}
+

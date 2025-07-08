@@ -1,12 +1,16 @@
 ﻿using MedicalEquipmentProject.Data;
 using MedicalEquipmentProject.Models;
 using MedicalEquipmentProject.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 using System.IO;
-using System.Threading.Tasks;
+using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MedicalEquipmentProject.Controllers
 {
@@ -19,13 +23,11 @@ namespace MedicalEquipmentProject.Controllers
             _context = context;
         }
 
-        // Index page to display the list of products
         public IActionResult Index()
         {
             return View();
         }
 
-        // Paginated list of products
         public IActionResult GetList(int page = 1, int pageSize = 10)
         {
             var products = _context.Products
@@ -36,35 +38,28 @@ namespace MedicalEquipmentProject.Controllers
             return PartialView("_ProductListPartial", products);
         }
 
-        // Helper method to save product images
         private async Task<string> SaveProductImage(IFormFile image)
         {
-            try
+            var fileName = Guid.NewGuid().ToString() + ".webp";
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "product-images");
+
+            if (!Directory.Exists(uploadsPath))
+                Directory.CreateDirectory(uploadsPath);
+
+            var filePath = Path.Combine(uploadsPath, fileName);
+
+            using var img = Image.Load(image.OpenReadStream());
+            img.Mutate(x => x.Resize(new ResizeOptions
             {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "product-images");
+                Size = new Size(600, 0),
+                Mode = ResizeMode.Max
+            }));
 
-                if (!Directory.Exists(uploadsPath))
-                {
-                    Directory.CreateDirectory(uploadsPath);
-                }
-
-                var filePath = Path.Combine(uploadsPath, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-                return "/product-images/" + fileName;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error uploading image: " + ex.Message);
-            }
+            await img.SaveAsync(filePath, new WebpEncoder()); // Convert sang webp
+            return "/product-images/" + fileName;
         }
 
-        // Add product (Admin only)
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddProduct(ProductViewModel model)
@@ -93,7 +88,7 @@ namespace MedicalEquipmentProject.Controllers
             {
                 foreach (var image in model.Images)
                 {
-                    var imageUrl = await SaveProductImage(image); // Call helper method
+                    var imageUrl = await SaveProductImage(image);
                     _context.ProductImages.Add(new ProductImage
                     {
                         ProductId = product.Id,
@@ -108,7 +103,6 @@ namespace MedicalEquipmentProject.Controllers
             return PartialView("_ProductListPartial", products);
         }
 
-        // Delete product (Admin only)
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> DeleteProduct(int id)
@@ -116,21 +110,15 @@ namespace MedicalEquipmentProject.Controllers
             var product = await _context.Products.Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
-            {
                 return NotFound();
-            }
 
-            // Delete images
             foreach (var image in product.ProductImages)
             {
                 var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.ImageUrl.TrimStart('/'));
                 if (System.IO.File.Exists(imagePath))
-                {
                     System.IO.File.Delete(imagePath);
-                }
             }
 
-            // Delete product
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
@@ -138,7 +126,6 @@ namespace MedicalEquipmentProject.Controllers
             return PartialView("_ProductListPartial", products);
         }
 
-        // Edit product (Admin only) - GET method to display the form
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> EditProduct(int id)
@@ -146,9 +133,7 @@ namespace MedicalEquipmentProject.Controllers
             var product = await _context.Products.Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
-            {
                 return NotFound();
-            }
 
             var model = new ProductViewModel
             {
@@ -162,66 +147,88 @@ namespace MedicalEquipmentProject.Controllers
             return View(model);
         }
 
-        // Edit product (Admin only) - POST method to save changes
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> EditProduct(ProductViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest("Invalid data.");
+                var errors = ModelState.Values
+                                       .SelectMany(v => v.Errors)
+                                       .Select(e => e.ErrorMessage)
+                                       .ToList();
+                return BadRequest(new { errors });
             }
 
-            var product = await _context.Products.Include(p => p.ProductImages).FirstOrDefaultAsync(p => p.Id == model.Id);
+            var product = await _context.Products.Include(p => p.ProductImages)
+                                                 .FirstOrDefaultAsync(p => p.Id == model.Id);
             if (product == null)
-            {
                 return NotFound();
-            }
 
             product.Name = model.Name;
             product.Quantity = model.Quantity;
             product.Date = model.Date;
             product.Price = model.Price;
 
-            // Delete old images if new ones are uploaded
             if (model.Images != null && model.Images.Count > 0)
             {
-                // Delete old images from directory
                 foreach (var oldImage in product.ProductImages)
                 {
                     var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", oldImage.ImageUrl.TrimStart('/'));
                     if (System.IO.File.Exists(imagePath))
-                    {
                         System.IO.File.Delete(imagePath);
-                    }
                 }
 
-                // Delete old images from database
                 _context.ProductImages.RemoveRange(product.ProductImages);
 
-                // Add new images
                 foreach (var image in model.Images)
                 {
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                    var filePath = Path.Combine("wwwroot", "product-images", fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await image.CopyToAsync(stream);
-                    }
-
+                    var imageUrl = await SaveProductImage(image);
                     _context.ProductImages.Add(new ProductImage
                     {
                         ProductId = product.Id,
-                        ImageUrl = "/product-images/" + fileName
+                        ImageUrl = imageUrl
                     });
                 }
             }
 
             await _context.SaveChangesAsync();
-
-            var products = await _context.Products.Include(p => p.ProductImages).ToListAsync();
-            return PartialView("_ProductListPartial", products);
+            return Ok();
         }
+
+        [HttpGet]
+        public IActionResult DownloadAllImages(int productId)
+        {
+            var product = _context.Products
+                .Include(p => p.ProductImages)
+                .FirstOrDefault(p => p.Id == productId);
+
+            if (product == null || product.ProductImages == null || !product.ProductImages.Any())
+                return NotFound("Không có ảnh để tải.");
+
+            var zipFileName = $"product_{productId}_images.zip";
+            var zipPath = Path.Combine(Path.GetTempPath(), zipFileName);
+
+            using (var zipStream = new FileStream(zipPath, FileMode.Create))
+            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))
+            {
+                foreach (var image in product.ProductImages)
+                {
+                    var fullImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.ImageUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(fullImagePath))
+                    {
+                        var entryName = Path.GetFileName(fullImagePath);
+                        archive.CreateEntryFromFile(fullImagePath, entryName);
+                    }
+                }
+            }
+
+            var zipBytes = System.IO.File.ReadAllBytes(zipPath);
+            System.IO.File.Delete(zipPath); // Xoá file tạm
+
+            return File(zipBytes, "application/zip", zipFileName);
+        }
+
+
     }
 }

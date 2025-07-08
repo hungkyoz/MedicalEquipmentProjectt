@@ -18,7 +18,24 @@
                 <td>
                     @if (p.ProductImages != null && p.ProductImages.Any())
                     {
-                        <img src="@p.ProductImages.First().ImageUrl" width="100" />
+                        var first = p.ProductImages.First();
+                        var fileName = System.IO.Path.GetFileName(first.ImageUrl);
+
+                        <a href="@first.ImageUrl" data-lightbox="product-@p.Id">
+                            <img src="@first.ImageUrl" width="100" class="img-thumbnail" />
+                        </a>
+
+                        <!-- Hiển thị các ảnh khác trong lightbox (ẩn) -->
+                        @foreach (var img in p.ProductImages.Skip(1))
+                        {
+                            <a href="@img.ImageUrl" data-lightbox="product-@p.Id" style="display:none;"></a>
+                        }
+
+                        <!-- Nút tải ảnh WebP đầu tiên -->
+                        <br />
+                        <a class="btn btn-sm btn-outline-primary mt-1" href="/Product/DownloadAllImages?productId=@p.Id">
+                            Tải tất cả ảnh WebP
+                        </a>
                     }
                     else
                     {
@@ -39,3 +56,39 @@
         }
     </tbody>
 </table>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet" />
+
+    <script>
+        function editProduct(id) {
+            window.location.href = "/Product/EditProduct/" + id;
+        }
+
+        function deleteProduct(id) {
+            Swal.fire({
+                title: "Bạn có chắc muốn xoá?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Xoá",
+                cancelButtonText: "Huỷ"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/Product/DeleteProduct", { id: id })
+                        .done(function (response) {
+                            $("#product-" + id).remove();
+                            Swal.fire("Đã xoá", "Sản phẩm đã được xoá thành công.", "success");
+                        })
+                        .fail(function (xhr) {
+                            if (xhr.status === 403) {
+                                Swal.fire("Không có quyền", "Bạn không có quyền xoá sản phẩm này.", "error");
+                            } else {
+                                Swal.fire("Lỗi", "Không thể xoá sản phẩm.", "error");
+                            }
+                        });
+                }
+            });
+        }
+    </script>
+}
