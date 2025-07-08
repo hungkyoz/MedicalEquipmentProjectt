@@ -1,5 +1,6 @@
 ﻿using MedicalEquipmentProject.Data;
 using MedicalEquipmentProject.Models;
+using MedicalEquipmentProject.Services;
 using MedicalEquipmentProject.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,9 +19,13 @@ namespace MedicalEquipmentProject.Controllers
     {
         private readonly AppDbContext _context;
 
-        public ProductController(AppDbContext context)
+
+        private readonly CloudinaryService _cloudinaryService;
+
+        public ProductController(AppDbContext context, CloudinaryService cloudinaryService)
         {
             _context = context;
+            _cloudinaryService = cloudinaryService;
         }
 
         public IActionResult Index()
@@ -38,7 +43,7 @@ namespace MedicalEquipmentProject.Controllers
             return PartialView("_ProductListPartial", products);
         }
 
-        private async Task<string> SaveProductImage(IFormFile image)
+        private async Task<(string ImageUrl, string CloudUrl)> SaveProductImage(IFormFile image)
         {
             var fileName = Guid.NewGuid().ToString() + ".webp";
             var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "product-images");
@@ -48,16 +53,25 @@ namespace MedicalEquipmentProject.Controllers
 
             var filePath = Path.Combine(uploadsPath, fileName);
 
-            using var img = Image.Load(image.OpenReadStream());
-            img.Mutate(x => x.Resize(new ResizeOptions
+            // Resize và lưu ra local
+            using (var img = Image.Load(image.OpenReadStream()))
             {
-                Size = new Size(600, 0),
-                Mode = ResizeMode.Max
-            }));
+                img.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(600, 0),
+                    Mode = ResizeMode.Max
+                }));
 
-            await img.SaveAsync(filePath, new WebpEncoder()); // Convert sang webp
-            return "/product-images/" + fileName;
+                await img.SaveAsync(filePath, new WebpEncoder());
+            }
+
+            // Dùng Stream lại để upload lên Cloudinary
+            await using var stream = System.IO.File.OpenRead(filePath);
+            var cloudUrl = await _cloudinaryService.UploadImageAsync(stream, fileName);
+
+            return ($"/product-images/{fileName}", cloudUrl);
         }
+
 
 
         [Authorize(Roles = "Admin")]
@@ -88,11 +102,14 @@ namespace MedicalEquipmentProject.Controllers
             {
                 foreach (var image in model.Images)
                 {
-                    var imageUrl = await SaveProductImage(image);
+                    var (imageUrl, cloudUrl) = await SaveProductImage(image);
+
                     _context.ProductImages.Add(new ProductImage
                     {
                         ProductId = product.Id,
+                        CloudImageUrl = cloudUrl ?? "",
                         ImageUrl = imageUrl
+                        
                     });
                 }
 
@@ -183,11 +200,13 @@ namespace MedicalEquipmentProject.Controllers
 
                 foreach (var image in model.Images)
                 {
-                    var imageUrl = await SaveProductImage(image);
+                    var (imageUrl, cloudUrl) = await SaveProductImage(image);
+
                     _context.ProductImages.Add(new ProductImage
                     {
                         ProductId = product.Id,
-                        ImageUrl = imageUrl
+                        ImageUrl = imageUrl,
+                        CloudImageUrl = cloudUrl ?? "",
                     });
                 }
             }

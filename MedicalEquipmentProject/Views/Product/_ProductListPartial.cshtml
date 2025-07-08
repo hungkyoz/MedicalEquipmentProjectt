@@ -16,32 +16,52 @@
         {
             <tr id="product-@p.Id">
                 <td>
-                    @if (p.ProductImages != null && p.ProductImages.Any())
-                    {
-                        var first = p.ProductImages.First();
-                        var fileName = System.IO.Path.GetFileName(first.ImageUrl);
+    @if (p.ProductImages != null && p.ProductImages.Any())
+    {
+        var first = p.ProductImages.First();
 
-                        <a href="@first.ImageUrl" data-lightbox="product-@p.Id">
-                            <img src="@first.ImageUrl" width="100" class="img-thumbnail" />
-                        </a>
+        <div>
+            <strong>Ảnh Local:</strong><br />
+            <a href="@first.ImageUrl" data-lightbox="product-@p.Id">
+                <img src="@first.ImageUrl" width="100" class="img-thumbnail" />
+            </a>
 
-                        <!-- Hiển thị các ảnh khác trong lightbox (ẩn) -->
-                        @foreach (var img in p.ProductImages.Skip(1))
-                        {
-                            <a href="@img.ImageUrl" data-lightbox="product-@p.Id" style="display:none;"></a>
-                        }
+            <!-- Ảnh Cloudinary -->
+            @if (!string.IsNullOrEmpty(first.CloudImageUrl))
+            {
+                <br />
+                <strong>Ảnh Cloudinary:</strong><br />
+                <a href="@first.CloudImageUrl" target="_blank">
+                    <img src="@first.CloudImageUrl" width="100" class="img-thumbnail" />
+                </a>
+            }
+        </div>
 
-                        <!-- Nút tải ảnh WebP đầu tiên -->
-                        <br />
-                        <a class="btn btn-sm btn-outline-primary mt-1" href="/Product/DownloadAllImages?productId=@p.Id">
-                            Tải tất cả ảnh WebP
-                        </a>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Không có ảnh</span>
-                    }
-                </td>
+        <!-- Hiển thị các ảnh khác (ẩn) -->
+        @foreach (var img in p.ProductImages.Skip(1))
+        {
+            <!-- Lightbox local -->
+            <a href="@img.ImageUrl" data-lightbox="product-@p.Id" style="display:none;"></a>
+
+            <!-- Cloud image (ẩn hoặc xử lý nếu muốn) -->
+            @if (!string.IsNullOrEmpty(img.CloudImageUrl))
+            {
+                <a href="@img.CloudImageUrl" target="_blank" style="display:none;"></a>
+            }
+        }
+
+        <!-- Nút tải tất cả ảnh WebP -->
+        <br />
+        <a class="btn btn-sm btn-outline-primary mt-1" href="/Product/DownloadAllImages?productId=@p.Id">
+            Tải tất cả ảnh WebP
+        </a>
+    }
+    else
+    {
+        <span class="text-muted">Không có ảnh</span>
+    }
+</td>
+
                 <td>@p.Name</td>
                 <td>@p.Quantity</td>
                 <td>@p.Date.ToString("dd/MM/yyyy")</td>

@@ -40,25 +40,7 @@ namespace MedicalEquipmentProject.Data
                 entity.Property(p => p.Price)
                     .HasPrecision(18, 2); // Fix decimal precision warning
 
-                // Seed data
-                entity.HasData(
-                    new Product
-                    {
-                        Id = 1,
-                        Name = "Bàn làm việc",
-                        Quantity = 10,
-                        Date = DateTime.Today.AddDays(-5),
-                        Price = 2500000
-                    },
-                    new Product
-                    {
-                        Id = 2,
-                        Name = "Ghế văn phòng",
-                        Quantity = 15,
-                        Date = DateTime.Today.AddDays(-10),
-                        Price = 1500000
-                    }
-                );
+                
             });
 
             // Configure ProductImages
@@ -68,21 +50,7 @@ namespace MedicalEquipmentProject.Data
                 .HasForeignKey(p => p.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Seed ProductImages data
-            modelBuilder.Entity<ProductImage>().HasData(
-                new ProductImage
-                {
-                    Id = 1,
-                    ProductId = 1,
-                    ImageUrl = "/product-images/1.sm.webp"
-                },
-                new ProductImage
-                {
-                    Id = 2,
-                    ProductId = 2,
-                    ImageUrl = "/product-images/2.webp"
-                }
-            );
+            
         }
     }
 }

@@ -1,11 +1,14 @@
-﻿using MedicalEquipmentProject.Data;
+﻿using CloudinaryDotNet;
+using MedicalEquipmentProject.Data;
 using MedicalEquipmentProject.Repositories;
 using MedicalEquipmentProject.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +25,24 @@ builder.Services.AddScoped<IMedicalEquipmentService, MedicalEquipmentService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<MedicalEquipmentServiceWithUoW>();
 builder.Services.AddScoped<IMedicalEquipmentRepository, MedicalEquipmentRepository>();
+// Thêm cấu hình Cloudinary 
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var config = serviceProvider.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    if (string.IsNullOrEmpty(config.CloudName) || string.IsNullOrEmpty(config.ApiKey) || string.IsNullOrEmpty(config.ApiSecret))
+        throw new InvalidOperationException("Cloudinary configuration is missing or invalid.");
+
+    var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+    return new Cloudinary(account);
+});
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+builder.Services.AddScoped<CloudinaryService>();
+
+
 
 
 //Add Authentication: Cookie + JWT
