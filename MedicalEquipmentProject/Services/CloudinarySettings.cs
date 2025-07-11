@@ -1,4 +1,5 @@
-﻿namespace MedicalEquipmentProject.Services
+﻿
+namespace MedicalEquipmentProject.Services
 {
     public class CloudinarySettings
     {

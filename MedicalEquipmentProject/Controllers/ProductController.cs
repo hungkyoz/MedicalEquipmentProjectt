@@ -109,7 +109,7 @@ namespace MedicalEquipmentProject.Controllers
                         ProductId = product.Id,
                         CloudImageUrl = cloudUrl ?? "",
                         ImageUrl = imageUrl
-                        
+
                     });
                 }
 

@@ -2,16 +2,19 @@
 using MedicalEquipmentProject.Models;
 using MedicalEquipmentProject.Services;
 using MedicalEquipmentProject.ViewModels;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
 
 namespace MedicalEquipmentProject.Api.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
+
     public class ProductApiController : ControllerBase
     {
         private readonly AppDbContext _context;
